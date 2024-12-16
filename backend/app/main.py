@@ -47,6 +47,20 @@ async def log_requests(request: Request, call_next):
 async def root():
     return {"message": "API is running"}
 
+@app.get("/db-test")
+async def test_db(db: Session = Depends(auth.get_db)):
+    try:
+        # Try to query users table
+        users = db.query(models.User).all()
+        return {
+            "status": "success",
+            "user_count": len(users),
+            "users": [{"username": user.username, "is_admin": user.is_admin} for user in users]
+        }
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
 @app.options("/token")
 async def token_preflight():
     return {}

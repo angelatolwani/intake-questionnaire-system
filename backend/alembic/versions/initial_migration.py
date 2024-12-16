@@ -10,11 +10,14 @@ import uuid
 import json
 import csv
 import os
+import logging
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 import bcrypt
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # revision identifiers, used by Alembic.
 revision: str = 'initial'
@@ -24,7 +27,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    logger.info("Hashing password in migration")
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    logger.info("Password hashed successfully")
+    return hashed
 
 
 def load_csv_data(filename: str) -> list:
@@ -36,15 +42,20 @@ def load_csv_data(filename: str) -> list:
 
 
 def upgrade() -> None:
+    logger.info("Starting initial migration")
+    
     # Drop all existing tables first
+    logger.info("Dropping existing tables")
     op.execute('DROP TABLE IF EXISTS answers CASCADE')
     op.execute('DROP TABLE IF EXISTS responses CASCADE')
     op.execute('DROP TABLE IF EXISTS question_junctions CASCADE')
     op.execute('DROP TABLE IF EXISTS questions CASCADE')
     op.execute('DROP TABLE IF EXISTS questionnaires CASCADE')
     op.execute('DROP TABLE IF EXISTS users CASCADE')
+    logger.info("Existing tables dropped")
 
     # Create users table
+    logger.info("Creating users table")
     op.create_table(
         'users',
         sa.Column('id', sa.String(), nullable=False),
@@ -56,8 +67,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('username')
     )
+    logger.info("Users table created")
 
-    # Insert initial admin user
+    # Insert initial users
+    logger.info("Creating initial users")
     users_table = table('users',
         column('id', sa.String),
         column('username', sa.String),
@@ -65,7 +78,7 @@ def upgrade() -> None:
         column('is_admin', sa.Boolean)
     )
     
-    op.bulk_insert(users_table, [
+    initial_users = [
         {
             'id': str(uuid.uuid4()),
             'username': 'admin',
@@ -78,9 +91,13 @@ def upgrade() -> None:
             'password': hash_password('user123'),
             'is_admin': False
         }
-    ])
+    ]
+    
+    op.bulk_insert(users_table, initial_users)
+    logger.info(f"Created initial users: {[user['username'] for user in initial_users]}")
 
     # Create questionnaires table
+    logger.info("Creating questionnaires table")
     op.create_table(
         'questionnaires',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -89,8 +106,10 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
+    logger.info("Questionnaires table created")
 
     # Create questions table
+    logger.info("Creating questions table")
     op.create_table(
         'questions',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -101,8 +120,10 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
+    logger.info("Questions table created")
 
     # Create question_junctions table
+    logger.info("Creating question_junctions table")
     op.create_table(
         'question_junctions',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -116,11 +137,13 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('questionnaire_id', 'question_id')
     )
+    logger.info("Question_junctions table created")
 
     # Create responses table with String ID
+    logger.info("Creating responses table")
     op.create_table(
         'responses',
-        sa.Column('id', sa.String(), nullable=False),  # Changed to String to match models.py
+        sa.Column('id', sa.String(), nullable=False),  
         sa.Column('user_id', sa.String(), nullable=False),
         sa.Column('questionnaire_id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
@@ -130,12 +153,14 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('user_id', 'questionnaire_id')
     )
+    logger.info("Responses table created")
 
     # Create answers table with String ID for response_id
+    logger.info("Creating answers table")
     op.create_table(
         'answers',
         sa.Column('id', sa.String(), nullable=False),
-        sa.Column('response_id', sa.String(), nullable=False),  # Changed to String to match models.py
+        sa.Column('response_id', sa.String(), nullable=False),  
         sa.Column('question_id', sa.Integer(), nullable=False),
         sa.Column('value', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
@@ -145,8 +170,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('response_id', 'question_id')
     )
+    logger.info("Answers table created")
 
     # Insert seed data
+    logger.info("Inserting seed data")
     questionnaires = table('questionnaires',
         column('id', sa.Integer),
         column('name', sa.String)
@@ -175,6 +202,7 @@ def upgrade() -> None:
         }
         for row in questionnaire_data
     ])
+    logger.info("Questionnaires inserted")
 
     # Load and insert questions
     question_data = load_csv_data('questionnaire_questions.csv')
@@ -186,6 +214,7 @@ def upgrade() -> None:
             'options': question_json.get('options'),
             'question': question_json['question']
         }])
+    logger.info("Questions inserted")
 
     # Load and insert question junctions
     junction_data = load_csv_data('questionnaire_junction.csv')
@@ -198,12 +227,15 @@ def upgrade() -> None:
         }
         for row in junction_data
     ])
+    logger.info("Question junctions inserted")
 
 
 def downgrade() -> None:
+    logger.info("Starting downgrade")
     op.drop_table('answers')
     op.drop_table('responses')
     op.drop_table('question_junctions')
     op.drop_table('questions')
     op.drop_table('questionnaires')
     op.drop_table('users')
+    logger.info("Downgrade complete")
