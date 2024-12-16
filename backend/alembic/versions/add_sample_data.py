@@ -36,24 +36,66 @@ def load_csv_data(filename: str) -> list:
 def upgrade() -> None:
     logger.info("Starting sample data migration")
     
-    # Define tables
+    # Ensure tables exist
+    logger.info("Ensuring tables exist")
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS questionnaires (
+            id INTEGER PRIMARY KEY,
+            name VARCHAR NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE
+        )
+    """)
+    
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY,
+            type VARCHAR NOT NULL,
+            options JSON,
+            question VARCHAR NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE
+        )
+    """)
+    
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS question_junctions (
+            id INTEGER PRIMARY KEY,
+            questionnaire_id INTEGER NOT NULL,
+            question_id INTEGER NOT NULL,
+            priority INTEGER NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE,
+            FOREIGN KEY (questionnaire_id) REFERENCES questionnaires (id),
+            FOREIGN KEY (question_id) REFERENCES questions (id),
+            UNIQUE (questionnaire_id, question_id)
+        )
+    """)
+    
+    # Define tables for data insertion
     questionnaires = table('questionnaires',
         column('id', sa.Integer),
-        column('name', sa.String)
+        column('name', sa.String),
+        column('created_at', sa.DateTime(timezone=True)),
+        column('updated_at', sa.DateTime(timezone=True))
     )
     
     questions = table('questions',
         column('id', sa.Integer),
         column('type', sa.String),
         column('options', sa.JSON),
-        column('question', sa.String)
+        column('question', sa.String),
+        column('created_at', sa.DateTime(timezone=True)),
+        column('updated_at', sa.DateTime(timezone=True))
     )
     
     question_junctions = table('question_junctions',
         column('id', sa.Integer),
         column('questionnaire_id', sa.Integer),
         column('question_id', sa.Integer),
-        column('priority', sa.Integer)
+        column('priority', sa.Integer),
+        column('created_at', sa.DateTime(timezone=True)),
+        column('updated_at', sa.DateTime(timezone=True))
     )
     
     # Load and insert questionnaires
@@ -62,7 +104,9 @@ def upgrade() -> None:
     op.bulk_insert(questionnaires, [
         {
             'id': int(q['id']),
-            'name': q['name']
+            'name': q['name'],
+            'created_at': sa.func.now(),
+            'updated_at': None
         }
         for q in questionnaire_data
     ])
@@ -75,8 +119,10 @@ def upgrade() -> None:
         op.bulk_insert(questions, [{
             'id': int(q['id']),
             'type': q_data['type'],
-            'options': q_data['options'],
-            'question': q_data['question']
+            'options': q_data.get('options', []),
+            'question': q_data['question'],
+            'created_at': sa.func.now(),
+            'updated_at': None
         }])
     
     # Load and insert question junctions
@@ -87,7 +133,9 @@ def upgrade() -> None:
             'id': int(j['id']),
             'questionnaire_id': int(j['questionnaire_id']),
             'question_id': int(j['question_id']),
-            'priority': int(j['priority'])
+            'priority': int(j['priority']),
+            'created_at': sa.func.now(),
+            'updated_at': None
         }
         for j in junction_data
     ])
