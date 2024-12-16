@@ -9,8 +9,8 @@ from . import models, schemas, auth
 from .database import engine, SessionLocal
 from .import_data import import_data
 
-# Create tables
-models.Base.metadata.create_all(bind=engine)
+# Remove table creation since we're using Alembic migrations
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Intake Questionnaire System")
 

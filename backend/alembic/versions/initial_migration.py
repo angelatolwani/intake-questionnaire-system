@@ -94,10 +94,10 @@ def upgrade() -> None:
         sa.UniqueConstraint('questionnaire_id', 'question_id')
     )
 
-    # Create responses table
+    # Create responses table with String ID
     op.create_table(
         'responses',
-        sa.Column('id', sa.String(), nullable=False),
+        sa.Column('id', sa.String(), nullable=False),  # Changed to String to match models.py
         sa.Column('user_id', sa.String(), nullable=False),
         sa.Column('questionnaire_id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
@@ -108,11 +108,11 @@ def upgrade() -> None:
         sa.UniqueConstraint('user_id', 'questionnaire_id')
     )
 
-    # Create answers table
+    # Create answers table with String ID for response_id
     op.create_table(
         'answers',
         sa.Column('id', sa.String(), nullable=False),
-        sa.Column('response_id', sa.String(), nullable=False),
+        sa.Column('response_id', sa.String(), nullable=False),  # Changed to String to match models.py
         sa.Column('question_id', sa.Integer(), nullable=False),
         sa.Column('value', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
