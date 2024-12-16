@@ -15,11 +15,10 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Card,
-  CardContent,
   Typography,
   Container,
   Box,
+  Stack,
 } from '@mui/material';
 import LogoutButton from '@/components/LogoutButton';
 
@@ -77,75 +76,171 @@ export default function AdminPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h3" component="h1">
-          Admin Dashboard
-        </Typography>
-        <LogoutButton />
-      </Box>
+    <Box sx={{ background: '#fafafa', minHeight: '100vh' }}>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Stack spacing={6}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center'
+          }}>
+            <Typography 
+              variant="h2" 
+              component="h1"
+              sx={{ 
+                fontWeight: 300,
+                color: '#2c3e50',
+                fontSize: { xs: '2rem', md: '3rem' },
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Admin Dashboard
+            </Typography>
+            <LogoutButton />
+          </Box>
 
-      <Typography variant="h4" component="h2" gutterBottom>
-        User Responses
-      </Typography>
-      
-      <TableContainer component={Paper} sx={{ mb: 4 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Username</TableCell>
-              <TableCell>Completed Questionnaires</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {userResponses.map((response) => (
-              <TableRow
-                key={response.username}
-                hover
-                onClick={() => handleRowClick(response.username)}
-                sx={{ cursor: 'pointer' }}
-              >
-                <TableCell>{response.username}</TableCell>
-                <TableCell>{response.response_count}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              background: 'white',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500,
+                        color: '#2c3e50',
+                        borderBottom: '2px solid #f5f6fa',
+                        py: 2.5,
+                      }}
+                    >
+                      Username
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500,
+                        color: '#2c3e50',
+                        borderBottom: '2px solid #f5f6fa',
+                        py: 2.5,
+                      }}
+                    >
+                      Completed Questionnaires
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {userResponses.map((response) => (
+                    <TableRow 
+                      key={response.username}
+                      onClick={() => handleRowClick(response.username)}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': { 
+                          backgroundColor: 'rgba(44, 62, 80, 0.04)',
+                        },
+                      }}
+                    >
+                      <TableCell 
+                        sx={{ 
+                          color: '#546e7a',
+                          borderBottom: '1px solid #f5f6fa',
+                          py: 2,
+                        }}
+                      >
+                        {response.username}
+                      </TableCell>
+                      <TableCell
+                        sx={{ 
+                          color: '#546e7a',
+                          borderBottom: '1px solid #f5f6fa',
+                          py: 2,
+                        }}
+                      >
+                        {response.response_count}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Stack>
 
-      <Dialog 
-        open={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Responses for {selectedUser}
-        </DialogTitle>
-        <DialogContent dividers>
-          {userDetails.map((detail, idx) => (
-            <Card key={idx} sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {detail.questionnaire_name}
-                </Typography>
-                {detail.answers.map((answer, answerIdx) => (
-                  <div key={answerIdx} style={{ marginBottom: '1rem' }}>
-                    <Typography variant="subtitle1" color="primary">
-                      Q: {answer.question}
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      A: {Array.isArray(answer.answer) 
-                        ? answer.answer.join(', ') 
-                        : answer.answer}
-                    </Typography>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </DialogContent>
-      </Dialog>
-    </Container>
+        <Dialog 
+          open={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              p: { xs: 2, md: 3 },
+            }
+          }}
+        >
+          <DialogTitle>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 300,
+                color: '#2c3e50',
+                mb: 2,
+              }}
+            >
+              Responses for {selectedUser}
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={4}>
+              {userDetails.map((detail, index) => (
+                <Box key={index}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 400,
+                      color: '#2c3e50',
+                      mb: 2,
+                    }}
+                  >
+                    {detail.questionnaire_name}
+                  </Typography>
+                  <Stack spacing={2}>
+                    {detail.answers.map((answer, answerIndex) => (
+                      <Box key={answerIndex}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            color: '#2c3e50',
+                            fontWeight: 500,
+                            mb: 0.5,
+                          }}
+                        >
+                          {answer.question}
+                        </Typography>
+                        <Typography 
+                          sx={{ 
+                            color: '#546e7a',
+                            pl: 2,
+                          }}
+                        >
+                          {Array.isArray(answer.answer) 
+                            ? answer.answer.join(', ') 
+                            : answer.answer}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          </DialogContent>
+        </Dialog>
+      </Container>
+    </Box>
   );
 }

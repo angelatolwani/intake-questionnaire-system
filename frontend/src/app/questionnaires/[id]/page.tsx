@@ -9,8 +9,6 @@ import { useForm, Controller } from 'react-hook-form';
 import {
   Container,
   Typography,
-  Card,
-  CardContent,
   FormControl,
   FormControlLabel,
   Checkbox,
@@ -22,9 +20,9 @@ import {
   Box,
   FormHelperText,
   FormGroup,
-  Paper,
   TextField,
   Stack,
+  Paper,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -89,124 +87,169 @@ export default function QuestionnairePage({ params }: { params: { id: string } }
         justifyContent="center" 
         alignItems="center" 
         minHeight="100vh"
+        sx={{ background: '#fafafa' }}
       >
-        <CircularProgress />
+        <CircularProgress sx={{ color: '#2c3e50' }} />
       </Box>
     );
   }
 
   if (error || !questionnaire) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error">{error || 'Questionnaire not found'}</Alert>
+      <Container maxWidth="md" sx={{ py: 4, background: '#fafafa', minHeight: '100vh' }}>
+        <Alert severity="error" 
+          sx={{ 
+            backgroundColor: 'transparent',
+            color: '#e74c3c',
+            '& .MuiAlert-icon': { color: '#e74c3c' }
+          }}
+        >
+          {error || 'Questionnaire not found'}
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={0} sx={{ p: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => router.push('/questionnaires')}
-          >
-            Back to Questionnaires
-          </Button>
-          <LogoutButton />
-        </Box>
-        <Typography variant="h3" component="h1" gutterBottom>
-          {questionnaire.name}
-        </Typography>
-      </Paper>
-      
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {questionnaire.questions.map((question) => (
-            <Card key={question.id}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {question.question}
-                </Typography>
-                <Controller
-                  name={question.id.toString()}
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field, fieldState: { error } }) => (
-                    <FormControl error={!!error} component="fieldset" fullWidth>
-                      {question.type === 'input' ? (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          multiline
-                          rows={3}
-                          error={!!error}
-                          helperText={error ? 'This field is required' : ''}
-                          onChange={(e) => field.onChange([e.target.value])}
-                          value={Array.isArray(field.value) ? field.value[0] || '' : field.value || ''}
-                        />
-                      ) : question.type === 'mcq' ? (
-                        <FormGroup>
-                          {question.options.map((option, index) => (
-                            <FormControlLabel
-                              key={index}
-                              control={
-                                <Checkbox
-                                  checked={field.value?.includes(option) || false}
-                                  onChange={(e) => {
-                                    const currentValues = Array.isArray(field.value) ? field.value : [];
-                                    if (e.target.checked) {
-                                      field.onChange([...currentValues, option]);
-                                    } else {
-                                      field.onChange(currentValues.filter(v => v !== option));
-                                    }
-                                  }}
-                                />
-                              }
-                              label={option}
-                            />
-                          ))}
-                        </FormGroup>
-                      ) : (
-                        <RadioGroup
-                          value={Array.isArray(field.value) ? field.value[0] || '' : field.value || ''}
-                          onChange={(e) => field.onChange([e.target.value])}
-                        >
-                          {question.options.map((option, index) => (
-                            <FormControlLabel
-                              key={index}
-                              value={option}
-                              control={<Radio />}
-                              label={option}
-                            />
-                          ))}
-                        </RadioGroup>
-                      )}
-                      {error && (
-                        <FormHelperText>This field is required</FormHelperText>
-                      )}
-                    </FormControl>
-                  )}
-                />
-              </CardContent>
-            </Card>
-          ))}
-          
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+    <Box sx={{ background: '#fafafa', minHeight: '100vh', py: 4 }}>
+      <Container maxWidth="md">
+        <Stack spacing={4}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              size="large"
-              disabled={submitting}
-              endIcon={submitting ? <CircularProgress size={20} /> : <SendIcon />}
+              startIcon={<ArrowBackIcon />}
+              onClick={() => router.push('/questionnaires')}
+              sx={{
+                color: '#2c3e50',
+                '&:hover': { backgroundColor: 'rgba(44, 62, 80, 0.04)' },
+              }}
             >
-              {submitting ? 'Submitting...' : 'Submit Questionnaire'}
+              Back
             </Button>
+            <LogoutButton />
           </Box>
-        </Box>
-      </form>
-    </Container>
+
+          <Typography 
+            variant="h2" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 300,
+              color: '#2c3e50',
+              fontSize: { xs: '2rem', md: '3rem' },
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {questionnaire.name}
+          </Typography>
+
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: { xs: 3, md: 6 },
+              background: 'white',
+              borderRadius: 2,
+            }}
+          >
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Stack spacing={6}>
+                {questionnaire.questions.map((question) => (
+                  <FormControl key={question.id} component="fieldset">
+                    <Typography 
+                      variant="h6" 
+                      gutterBottom 
+                      sx={{ 
+                        fontWeight: 400,
+                        color: '#2c3e50',
+                        mb: 2,
+                      }}
+                    >
+                      {question.question}
+                    </Typography>
+
+                    <Controller
+                      name={question.id.toString()}
+                      control={control}
+                      defaultValue={question.type === 'mcq' ? [] : ''}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        question.type === 'mcq' ? (
+                          <FormGroup>
+                            {question.options.map((option) => (
+                              <FormControlLabel
+                                key={option}
+                                control={
+                                  <Checkbox 
+                                    checked={field.value?.includes(option)}
+                                    onChange={(e) => {
+                                      const currentValues = Array.isArray(field.value) ? field.value : [];
+                                      const newValue = e.target.checked
+                                        ? [...currentValues, option]
+                                        : currentValues.filter(v => v !== option);
+                                      field.onChange(newValue);
+                                    }}
+                                    sx={{
+                                      color: '#546e7a',
+                                      '&.Mui-checked': { color: '#2c3e50' },
+                                    }}
+                                  />
+                                }
+                                label={
+                                  <Typography sx={{ color: '#546e7a' }}>
+                                    {option}
+                                  </Typography>
+                                }
+                              />
+                            ))}
+                          </FormGroup>
+                        ) : (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            multiline
+                            rows={3}
+                            onChange={(e) => field.onChange([e.target.value])}
+                            value={Array.isArray(field.value) ? field.value[0] || '' : field.value || ''}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: '#e0e0e0',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#2c3e50',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#2c3e50',
+                                },
+                              },
+                            }}
+                          />
+                        )
+                      )}
+                    />
+                  </FormControl>
+                ))}
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={submitting}
+                  endIcon={submitting ? <CircularProgress size={20} /> : <SendIcon />}
+                  sx={{
+                    mt: 4,
+                    py: 1.5,
+                    px: 4,
+                    backgroundColor: '#2c3e50',
+                    '&:hover': { backgroundColor: '#34495e' },
+                    textTransform: 'none',
+                    fontWeight: 400,
+                  }}
+                >
+                  Submit
+                </Button>
+              </Stack>
+            </form>
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

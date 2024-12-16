@@ -41,90 +41,164 @@ export default function LoginPage() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: '#fafafa',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <Container maxWidth="sm">
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
+            p: { xs: 4, md: 6 },
+            background: 'white',
+            borderRadius: 2,
           }}
         >
           <Box
             sx={{
-              backgroundColor: 'primary.main',
-              borderRadius: '50%',
-              p: 1,
-              mb: 1,
-              color: 'white',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
-            <LockOutlinedIcon />
-          </Box>
-          
-          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-            Sign in to your account
-          </Typography>
-
-          <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              autoComplete="username"
-              autoFocus
-              error={!!errors.username}
-              helperText={errors.username?.message}
-              {...register('username', { required: 'Username is required' })}
-            />
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="password"
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              {...register('password', { required: 'Password is required' })}
-            />
+            <Box
+              sx={{
+                backgroundColor: '#2c3e50',
+                borderRadius: '50%',
+                p: 1.5,
+                mb: 3,
+                color: 'white',
+              }}
+            >
+              <LockOutlinedIcon />
+            </Box>
+            
+            <Typography 
+              component="h1" 
+              sx={{ 
+                fontSize: { xs: '1.75rem', md: '2.25rem' },
+                fontWeight: 300,
+                color: '#2c3e50',
+                letterSpacing: '-0.02em',
+                mb: 4,
+              }}
+            >
+              Sign in to your account
+            </Typography>
 
             {loginError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
+              <Alert 
+                severity="error"
+                sx={{ 
+                  mb: 3, 
+                  width: '100%',
+                  backgroundColor: 'transparent',
+                  color: '#e74c3c',
+                  '& .MuiAlert-icon': { color: '#e74c3c' }
+                }}
+              >
                 {loginError}
               </Alert>
             )}
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-              disabled={isSubmitting}
+            <Box 
+              component="form" 
+              onSubmit={handleSubmit(onSubmit)} 
+              sx={{ width: '100%' }}
             >
-              {isSubmitting ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'Sign In'
-              )}
-            </Button>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                autoComplete="username"
+                autoFocus
+                error={!!errors.username}
+                helperText={errors.username?.message}
+                {...register('username', { required: 'Username is required' })}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e0e0',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#2c3e50',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#2c3e50',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#546e7a',
+                    '&.Mui-focused': {
+                      color: '#2c3e50',
+                    },
+                  },
+                }}
+              />
+
+              <TextField
+                required
+                fullWidth
+                id="password"
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                {...register('password', { required: 'Password is required' })}
+                sx={{
+                  mb: 4,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e0e0',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#2c3e50',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#2c3e50',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#546e7a',
+                    '&.Mui-focused': {
+                      color: '#2c3e50',
+                    },
+                  },
+                }}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isSubmitting}
+                sx={{
+                  py: 1.5,
+                  backgroundColor: '#2c3e50',
+                  '&:hover': { backgroundColor: '#34495e' },
+                  textTransform: 'none',
+                  fontWeight: 400,
+                  fontSize: '1.1rem',
+                }}
+              >
+                {isSubmitting ? (
+                  <CircularProgress size={24} sx={{ color: 'white' }} />
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </Box>
           </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 }
