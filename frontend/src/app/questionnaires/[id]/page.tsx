@@ -23,8 +23,12 @@ import {
   FormHelperText,
   FormGroup,
   Paper,
+  TextField,
+  Stack,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LogoutButton from '@/components/LogoutButton';
 
 interface QuestionnaireFormData {
   [key: string]: string | string[];
@@ -102,6 +106,16 @@ export default function QuestionnairePage({ params }: { params: { id: string } }
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper elevation={0} sx={{ p: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => router.push('/questionnaires')}
+          >
+            Back to Questionnaires
+          </Button>
+          <LogoutButton />
+        </Box>
         <Typography variant="h3" component="h1" gutterBottom>
           {questionnaire.name}
         </Typography>
@@ -121,7 +135,18 @@ export default function QuestionnairePage({ params }: { params: { id: string } }
                   rules={{ required: true }}
                   render={({ field, fieldState: { error } }) => (
                     <FormControl error={!!error} component="fieldset" fullWidth>
-                      {question.type === 'mcq' ? (
+                      {question.type === 'input' ? (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          multiline
+                          rows={3}
+                          error={!!error}
+                          helperText={error ? 'This field is required' : ''}
+                          onChange={(e) => field.onChange([e.target.value])}
+                          value={Array.isArray(field.value) ? field.value[0] || '' : field.value || ''}
+                        />
+                      ) : question.type === 'mcq' ? (
                         <FormGroup>
                           {question.options.map((option, index) => (
                             <FormControlLabel
@@ -145,7 +170,7 @@ export default function QuestionnairePage({ params }: { params: { id: string } }
                         </FormGroup>
                       ) : (
                         <RadioGroup
-                          value={field.value || ''}
+                          value={Array.isArray(field.value) ? field.value[0] || '' : field.value || ''}
                           onChange={(e) => field.onChange([e.target.value])}
                         >
                           {question.options.map((option, index) => (

@@ -18,6 +18,7 @@ import {
   Box,
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import LogoutButton from '@/components/LogoutButton';
 
 export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -69,9 +70,12 @@ export default function QuestionnairesPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom sx={{ mb: 4 }}>
-        Available Questionnaires
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h3" component="h1">
+          Available Questionnaires
+        </Typography>
+        <LogoutButton />
+      </Box>
       
       {questionnaires.length === 0 ? (
         <Card sx={{ py: 6, textAlign: 'center' }}>
