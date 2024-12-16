@@ -281,12 +281,14 @@ async def get_user_responses(
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get all users and their response counts
+    # Get all non-admin users and their response counts
     user_responses = db.query(
         models.User.username,
         sa.func.count(models.Response.id).label('response_count')
     ).outerjoin(
         models.Response
+    ).filter(
+        models.User.is_admin == False  # Only get non-admin users
     ).group_by(
         models.User.username
     ).all()

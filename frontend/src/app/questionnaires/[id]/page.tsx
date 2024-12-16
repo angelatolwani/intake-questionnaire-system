@@ -6,6 +6,25 @@ import { useAuthStore } from '@/stores/auth';
 import * as api from '@/lib/api';
 import { QuestionnaireWithQuestions, Answer } from '@/types/api';
 import { useForm, Controller } from 'react-hook-form';
+import {
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  FormControl,
+  FormControlLabel,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  Button,
+  CircularProgress,
+  Alert,
+  Box,
+  FormHelperText,
+  FormGroup,
+  Paper,
+} from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 
 interface QuestionnaireFormData {
   [key: string]: string | string[];
@@ -61,90 +80,108 @@ export default function QuestionnairePage({ params }: { params: { id: string } }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error || !questionnaire) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="error text-xl">{error || 'Questionnaire not found'}</div>
-      </div>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Alert severity="error">{error || 'Questionnaire not found'}</Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="px-4 py-6 sm:px-0">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">{questionnaire.name}</h1>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper elevation={0} sx={{ p: 4, mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom>
+          {questionnaire.name}
+        </Typography>
+      </Paper>
+      
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {questionnaire.questions.map((question) => (
-            <div key={question.id} className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">{question.question}</h3>
-              <Controller
-                name={question.id.toString()}
-                control={control}
-                rules={{ required: true }}
-                render={({ field, fieldState: { error } }) => (
-                  <div className="space-y-2">
-                    {question.type === 'mcq' ? (
-                      <div className="space-y-3">
-                        {question.options.map((option, index) => (
-                          <label key={index} className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              value={option}
-                              onChange={(e) => {
-                                const currentValues = Array.isArray(field.value) ? field.value : [];
-                                if (e.target.checked) {
-                                  field.onChange([...currentValues, option]);
-                                } else {
-                                  field.onChange(currentValues.filter(v => v !== option));
-                                }
-                              }}
-                              checked={Array.isArray(field.value) && field.value.includes(option)}
+            <Card key={question.id}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {question.question}
+                </Typography>
+                <Controller
+                  name={question.id.toString()}
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field, fieldState: { error } }) => (
+                    <FormControl error={!!error} component="fieldset" fullWidth>
+                      {question.type === 'mcq' ? (
+                        <FormGroup>
+                          {question.options.map((option, index) => (
+                            <FormControlLabel
+                              key={index}
+                              control={
+                                <Checkbox
+                                  checked={field.value?.includes(option) || false}
+                                  onChange={(e) => {
+                                    const currentValues = Array.isArray(field.value) ? field.value : [];
+                                    if (e.target.checked) {
+                                      field.onChange([...currentValues, option]);
+                                    } else {
+                                      field.onChange(currentValues.filter(v => v !== option));
+                                    }
+                                  }}
+                                />
+                              }
+                              label={option}
                             />
-                            <span className="text-gray-700">{option}</span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        className="input"
-                        {...field}
-                      />
-                    )}
-                    {error && (
-                      <p className="error">This question is required</p>
-                    )}
-                  </div>
-                )}
-              />
-            </div>
+                          ))}
+                        </FormGroup>
+                      ) : (
+                        <RadioGroup
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange([e.target.value])}
+                        >
+                          {question.options.map((option, index) => (
+                            <FormControlLabel
+                              key={index}
+                              value={option}
+                              control={<Radio />}
+                              label={option}
+                            />
+                          ))}
+                        </RadioGroup>
+                      )}
+                      {error && (
+                        <FormHelperText>This field is required</FormHelperText>
+                      )}
+                    </FormControl>
+                  )}
+                />
+              </CardContent>
+            </Card>
           ))}
           
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="error">{error}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <button
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+            <Button
               type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
               disabled={submitting}
-              className="btn btn-primary"
+              endIcon={submitting ? <CircularProgress size={20} /> : <SendIcon />}
             >
               {submitting ? 'Submitting...' : 'Submit Questionnaire'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            </Button>
+          </Box>
+        </Box>
+      </form>
+    </Container>
   );
 }

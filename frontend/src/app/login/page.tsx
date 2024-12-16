@@ -4,6 +4,17 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import { useEffect } from 'react';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Button, 
+  Box,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 interface LoginForm {
   username: string;
@@ -11,7 +22,7 @@ interface LoginForm {
 }
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>();
   const { login, error: loginError, user } = useAuthStore();
   const router = useRouter();
 
@@ -30,59 +41,90 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="card max-w-md w-full space-y-8">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: 'primary.main',
+              borderRadius: '50%',
+              p: 1,
+              mb: 1,
+              color: 'white',
+            }}
+          >
+            <LockOutlinedIcon />
+          </Box>
+          
+          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
             Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="username" className="label">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                className="input"
-                {...register('username', { required: 'Username is required' })}
-              />
-              {errors.username && (
-                <p className="error">{errors.username.message}</p>
+          </Typography>
+
+          <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="username"
+              label="Username"
+              autoComplete="username"
+              autoFocus
+              error={!!errors.username}
+              helperText={errors.username?.message}
+              {...register('username', { required: 'Username is required' })}
+            />
+
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              {...register('password', { required: 'Password is required' })}
+            />
+
+            {loginError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {loginError}
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, py: 1.5 }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Sign In'
               )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="label">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                className="input"
-                {...register('password', { required: 'Password is required' })}
-              />
-              {errors.password && (
-                <p className="error">{errors.password.message}</p>
-              )}
-            </div>
-          </div>
-
-          {loginError && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="error">{loginError}</p>
-            </div>
-          )}
-
-          <div>
-            <button type="submit" className="btn btn-primary w-full">
-              Sign in
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 }

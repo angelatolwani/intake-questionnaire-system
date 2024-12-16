@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import * as api from '@/lib/api';
 import { Questionnaire } from '@/types/api';
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  CircularProgress,
+  Alert,
+  Box,
+} from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -35,51 +48,79 @@ export default function QuestionnairesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="error text-xl">{error}</div>
-      </div>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="px-4 py-6 sm:px-0">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Available Questionnaires</h1>
-        
-        {questionnaires.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className="text-gray-500">No questionnaires available at the moment.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {questionnaires.map((questionnaire) => (
-              <div
-                key={questionnaire.id}
-                className="card hover:shadow-md transition-shadow duration-200 cursor-pointer"
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h3" component="h1" gutterBottom sx={{ mb: 4 }}>
+        Available Questionnaires
+      </Typography>
+      
+      {questionnaires.length === 0 ? (
+        <Card sx={{ py: 6, textAlign: 'center' }}>
+          <CardContent>
+            <Typography color="text.secondary">
+              No questionnaires available at the moment.
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {questionnaires.map((questionnaire) => (
+            <Grid item xs={12} sm={6} md={4} key={questionnaire.id}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                    cursor: 'pointer'
+                  }
+                }}
                 onClick={() => router.push(`/questionnaires/${questionnaire.id}`)}
               >
-                <h3 className="text-lg font-medium text-gray-900 mb-2">{questionnaire.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Click to start this questionnaire
-                </p>
-                <div className="mt-4 flex justify-end">
-                  <span className="btn btn-secondary">
-                    Start Questionnaire →
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    {questionnaire.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Click to start this questionnaire
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    endIcon={<ArrowForwardIcon />}
+                  >
+                    Start
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Container>
   );
 }
