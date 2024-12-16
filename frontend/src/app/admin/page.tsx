@@ -19,13 +19,7 @@ import {
   CardContent,
   Typography,
   Container,
-  Box,
-  Button,
-  Alert,
-  Snackbar,
 } from '@mui/material';
-import LogoutButton from '@/components/LogoutButton';
-import AddIcon from '@mui/icons-material/Add';
 
 interface UserResponse {
   username: string;
@@ -50,15 +44,6 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userDetails, setUserDetails] = useState<ResponseDetail[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
 
   useEffect(() => {
     if (!user?.is_admin) {
@@ -89,57 +74,9 @@ export default function AdminPage() {
     }
   };
 
-  const handleCreateTestUsers = async () => {
-    try {
-      const result = await apiClient.createTestUsers();
-      setNotification({
-        open: true,
-        message: result.message,
-        severity: 'success'
-      });
-      // Refresh the user responses list
-      const fetchUserResponses = async () => {
-        try {
-          const data = await apiClient.getUserResponses();
-          setUserResponses(data);
-        } catch (error) {
-          console.error('Failed to fetch user responses:', error);
-        }
-      };
-      fetchUserResponses();
-    } catch (error) {
-      setNotification({
-        open: true,
-        message: 'Failed to create test users',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleCloseNotification = () => {
-    setNotification(prev => ({ ...prev, open: false }));
-  };
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h3" component="h1">
-          Admin Dashboard
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<AddIcon />}
-            onClick={handleCreateTestUsers}
-          >
-            Create Test Users
-          </Button>
-          <LogoutButton />
-        </Box>
-      </Box>
-
-      <Typography variant="h4" component="h2" gutterBottom>
+      <Typography variant="h4" component="h1" gutterBottom>
         User Responses
       </Typography>
       
@@ -200,21 +137,6 @@ export default function AdminPage() {
           ))}
         </DialogContent>
       </Dialog>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={handleCloseNotification} 
-          severity={notification.severity}
-          sx={{ width: '100%' }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }

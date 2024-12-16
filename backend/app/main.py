@@ -253,15 +253,6 @@ async def create_response(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/completed-questionnaires", response_model=List[int])
-async def get_completed_questionnaires(
-    current_user: models.User = Depends(auth.get_current_active_user),
-    db: Session = Depends(auth.get_db)
-):
-    """Get a list of questionnaire IDs that the current user has completed"""
-    responses = db.query(models.Response).filter(models.Response.user_id == current_user.id).all()
-    return [response.questionnaire_id for response in responses]
-
 # Admin endpoints
 @app.get("/admin/responses/", response_model=List[schemas.Response])
 async def list_all_responses(
@@ -369,60 +360,40 @@ async def import_csv_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/admin/create-test-users")
-async def create_test_users(
-    current_user: models.User = Depends(auth.get_current_active_user),
-    db: Session = Depends(auth.get_db)
-):
-    """Create two test users. Only accessible by admin users."""
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admin users can create test users"
-        )
-
-    test_users = [
-        {
-            "username": "testuser1",
-            "password": "testpass123",
-            "is_admin": False
-        },
-        {
-            "username": "testuser2",
-            "password": "testpass123",
-            "is_admin": False
-        }
-    ]
-
-    created_users = []
-    for user_data in test_users:
-        # Check if user already exists
-        existing_user = db.query(models.User).filter(
-            models.User.username == user_data["username"]
-        ).first()
-        
-        if existing_user:
-            continue
-
-        # Create new user
-        hashed_password = auth.get_password_hash(user_data["password"])
-        user = models.User(
-            id=str(uuid.uuid4()),
-            username=user_data["username"],
-            password=hashed_password,
-            is_admin=user_data["is_admin"]
-        )
-        db.add(user)
-        created_users.append(user_data["username"])
-
+@app.post("/create-test-users")
+async def create_test_users(db: Session = Depends(auth.get_db)):
     try:
+        # Check if users already exist
+        if db.query(models.User).count() > 0:
+            return {"status": "error", "message": "Users already exist"}
+        
+        # Create test users
+        users = [
+            models.User(
+                id=str(uuid.uuid4()),
+                username="admin",
+                password=auth.get_password_hash("admin123"),
+                is_admin=True
+            ),
+            models.User(
+                id=str(uuid.uuid4()),
+                username="user",
+                password=auth.get_password_hash("user123"),
+                is_admin=False
+            )
+        ]
+        
+        # Add users to database
+        for user in users:
+            db.add(user)
         db.commit()
+        
         return {
-            "message": f"Successfully created users: {', '.join(created_users)}" if created_users else "No new users created (they may already exist)"
+            "status": "success",
+            "message": "Test users created",
+            "users": [{"username": user.username, "is_admin": user.is_admin} for user in users]
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create test users: {str(e)}"
-        )
+        logger.error(f"Error creating test users: {str(e)}")
+        return {"status": "error", "message": str(e)}

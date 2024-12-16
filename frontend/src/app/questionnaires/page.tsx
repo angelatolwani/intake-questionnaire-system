@@ -16,15 +16,12 @@ import {
   CircularProgress,
   Alert,
   Box,
-  Chip,
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LogoutButton from '@/components/LogoutButton';
 
 export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
-  const [completedIds, setCompletedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
@@ -36,14 +33,10 @@ export default function QuestionnairesPage() {
       return;
     }
 
-    const fetchData = async () => {
+    const fetchQuestionnaires = async () => {
       try {
-        const [questionnairesData, completedData] = await Promise.all([
-          api.getQuestionnaires(),
-          api.getCompletedQuestionnaires()
-        ]);
-        setQuestionnaires(questionnairesData);
-        setCompletedIds(completedData);
+        const data = await api.getQuestionnaires();
+        setQuestionnaires(data);
       } catch (err) {
         setError('Failed to load questionnaires');
       } finally {
@@ -51,7 +44,7 @@ export default function QuestionnairesPage() {
       }
     };
 
-    fetchData();
+    fetchQuestionnaires();
   }, [user, router]);
 
   if (loading) {
@@ -94,57 +87,42 @@ export default function QuestionnairesPage() {
         </Card>
       ) : (
         <Grid container spacing={3}>
-          {questionnaires.map((questionnaire) => {
-            const isCompleted = completedIds.includes(questionnaire.id);
-            return (
-              <Grid item xs={12} sm={6} md={4} key={questionnaire.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                      cursor: 'pointer'
-                    }
-                  }}
-                  onClick={() => router.push(`/questionnaires/${questionnaire.id}`)}
-                >
-                  <CardContent sx={{ flexGrow: 1, position: 'relative' }}>
-                    {isCompleted && (
-                      <Chip
-                        icon={<CheckCircleIcon />}
-                        label="Completed"
-                        color="success"
-                        size="small"
-                        sx={{ 
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                        }}
-                      />
-                    )}
-                    <Typography variant="h5" component="h2" gutterBottom>
-                      {questionnaire.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Click to {isCompleted ? 'update' : 'start'} this questionnaire
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button 
-                      endIcon={<ArrowForwardIcon />} 
-                      sx={{ ml: 'auto' }}
-                    >
-                      {isCompleted ? 'Update Answers' : 'Start'}
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            );
-          })}
+          {questionnaires.map((questionnaire) => (
+            <Grid item xs={12} sm={6} md={4} key={questionnaire.id}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                    cursor: 'pointer'
+                  }
+                }}
+                onClick={() => router.push(`/questionnaires/${questionnaire.id}`)}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    {questionnaire.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Click to start this questionnaire
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    endIcon={<ArrowForwardIcon />}
+                  >
+                    Start
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
         </Grid>
       )}
     </Container>

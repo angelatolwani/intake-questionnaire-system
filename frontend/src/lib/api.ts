@@ -205,16 +205,6 @@ export const getUserResponseDetails = async (username: string): Promise<any> => 
   }
 };
 
-export async function getCompletedQuestionnaires(): Promise<number[]> {
-  const response = await axios.get<number[]>('/api/user/completed-questionnaires');
-  return response.data;
-}
-
-export async function createTestUsers(): Promise<{ message: string }> {
-  const response = await axios.post<{ message: string }>('/api/admin/create-test-users');
-  return response.data;
-}
-
 const handleApiError = (error: any) => {
   if (axios.isAxiosError(error)) {
     console.error('API error details:', {
