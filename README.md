@@ -4,12 +4,22 @@ A  web application that allows users to answer questionnaires and administrators
 
 Deployed on Render: [https://questionnaire-frontend.onrender.com/](https://questionnaire-frontend.onrender.com/)
 
+### Test Accounts
+```
+Admin User:
+Username: admin
+Password: admin123
+
+Regular User:
+Username: user
+Password: user123
+```
+
 ## Features
 
 ### User Interface
 
 1. **Landing Page**
-   - Clean, modern welcome screen
    - Quick access to login via "Get Started" button
 
 2. **Login Page**
@@ -19,24 +29,21 @@ Deployed on Render: [https://questionnaire-frontend.onrender.com/](https://quest
 
 3. **Questionnaire Selection Page**
    - List of available questionnaires
-   - Visual indicators for completed questionnaires
    - Ability to retake questionnaires (keeps latest response)
-   - Modern card-based layout with hover effects
 
 4. **Questionnaire Page**
    - Support for multiple question types:
-     - Multiple choice
+     - Multiple choice (radio buttons)
+     - Multiple choice (checkboxes)
      - Text input fields
    - Input validation
    - Back navigation to questionnaire list
-   - Loading states and error handling
 
 5. **Admin Panel**
    - Comprehensive view of user responses
    - Table view of users and their response counts
    - Detailed modal view of individual responses
    - Q&A format display
-   - Logout functionality
 
 ## Technical Stack
 
@@ -60,13 +67,7 @@ Deployed on Render: [https://questionnaire-frontend.onrender.com/](https://quest
    cd backend && pip install -r requirements.txt
    ```
 
-2. Set up environment variables:
-   Copy `.env.example` to `.env` and update the values:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Run development servers:
+2. Run development servers:
    ```bash
    # Frontend
    cd frontend && npm run dev
@@ -91,13 +92,4 @@ Deployed on Render: [https://questionnaire-frontend.onrender.com/](https://quest
 4. Click on a user to view their detailed responses
 5. Use the logout button when finished
 
-### Test Accounts
-```
-Admin User:
-Username: admin
-Password: admin123
 
-Regular User:
-Username: user
-Password: user123
-```
