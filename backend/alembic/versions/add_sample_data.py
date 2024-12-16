@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 # revision identifiers, used by Alembic.
 revision: str = 'add_sample_data'
-down_revision: str = 'remove_timestamps'
+down_revision: Union[str, None] = 'remove_timestamps'  # This ensures it runs after remove_timestamps
 branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = 'initial'  # This ensures initial migration runs first
 
 
 def load_csv_data(filename: str) -> list:
