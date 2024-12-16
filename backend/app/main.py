@@ -20,6 +20,7 @@ app = FastAPI(title="Intake Questionnaire System")
 # CORS middleware
 origins = [
     "http://localhost:3000",
+    "https://localhost:3000",
     "https://questionnaire-frontend.onrender.com",
     "https://questionnaire-frontend-l0bs.onrender.com"
 ]
@@ -182,7 +183,19 @@ async def create_response(
     db: Session = Depends(auth.get_db),
     current_user: models.User = Depends(auth.get_current_active_user)
 ):
-    # Create response
+    # Check if user has already submitted a response for this questionnaire
+    existing_response = db.query(models.Response).filter(
+        models.Response.user_id == current_user.id,
+        models.Response.questionnaire_id == response.questionnaire_id
+    ).first()
+
+    if existing_response:
+        # Delete existing response and its answers
+        db.query(models.Answer).filter(models.Answer.response_id == existing_response.id).delete()
+        db.delete(existing_response)
+        db.commit()
+
+    # Create new response
     db_response = models.Response(
         id=str(uuid.uuid4()),
         user_id=current_user.id,
