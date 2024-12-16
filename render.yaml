@@ -7,9 +7,9 @@ services:
       cd frontend
       rm -rf node_modules .next
       npm cache clean --force
+      npm install tailwindcss postcss autoprefixer @tailwindcss/forms @tailwindcss/typography --save-dev
       npm install --legacy-peer-deps
-      npm install tailwindcss postcss autoprefixer --save-dev
-      npm run build
+      NODE_ENV=production npm run build
     startCommand: cd frontend && npm start
     envVars:
       - key: NODE_ENV
