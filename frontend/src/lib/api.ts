@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, Questionnaire, QuestionnaireWithQuestions, Response, User } from '../types/api';
 
 const api = axios.create({
-  baseURL: 'https://questionnaire-backend.onrender.com',  // Hardcode for now
+  baseURL: 'https://questionnaire-backend-l0bs.onrender.com',  // Updated to correct backend URL
   headers: {
     'Content-Type': 'application/json',
   },

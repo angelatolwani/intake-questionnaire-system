@@ -19,7 +19,8 @@ app = FastAPI(title="Intake Questionnaire System")
 # CORS middleware
 origins = [
     "http://localhost:3000",
-    "https://questionnaire-frontend.onrender.com"
+    "https://questionnaire-frontend.onrender.com",
+    "https://questionnaire-frontend-l0bs.onrender.com"
 ]
 
 app.add_middleware(
