@@ -9,6 +9,7 @@ import logging
 from . import models, schemas, auth
 from .database import engine, SessionLocal
 from .import_data import import_data
+import sqlalchemy as sa
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -52,8 +53,21 @@ async def test_db(db: Session = Depends(auth.get_db)):
     try:
         # Try to query users table
         users = db.query(models.User).all()
+        
+        # Check alembic_version table
+        inspector = sa.inspect(engine)
+        tables = inspector.get_table_names()
+        
+        # Check if alembic_version exists and get current version
+        current_version = None
+        if 'alembic_version' in tables:
+            result = db.execute(sa.text('SELECT version_num FROM alembic_version')).first()
+            current_version = result[0] if result else None
+        
         return {
             "status": "success",
+            "database_tables": tables,
+            "alembic_version": current_version,
             "user_count": len(users),
             "users": [{"username": user.username, "is_admin": user.is_admin} for user in users]
         }
@@ -214,3 +228,41 @@ async def import_csv_data(
         return {"message": "Data imported successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/create-test-users")
+async def create_test_users(db: Session = Depends(auth.get_db)):
+    try:
+        # Check if users already exist
+        if db.query(models.User).count() > 0:
+            return {"status": "error", "message": "Users already exist"}
+        
+        # Create test users
+        users = [
+            models.User(
+                id=str(uuid.uuid4()),
+                username="admin",
+                password=auth.get_password_hash("admin123"),
+                is_admin=True
+            ),
+            models.User(
+                id=str(uuid.uuid4()),
+                username="user",
+                password=auth.get_password_hash("user123"),
+                is_admin=False
+            )
+        ]
+        
+        # Add users to database
+        for user in users:
+            db.add(user)
+        db.commit()
+        
+        return {
+            "status": "success",
+            "message": "Test users created",
+            "users": [{"username": user.username, "is_admin": user.is_admin} for user in users]
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating test users: {str(e)}")
+        return {"status": "error", "message": str(e)}
