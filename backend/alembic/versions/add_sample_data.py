@@ -72,73 +72,59 @@ def upgrade() -> None:
         )
     """)
     
-    # Define tables for data insertion
-    questionnaires = table('questionnaires',
-        column('id', sa.Integer),
-        column('name', sa.String),
-        column('created_at', sa.DateTime(timezone=True)),
-        column('updated_at', sa.DateTime(timezone=True))
-    )
-    
-    questions = table('questions',
-        column('id', sa.Integer),
-        column('type', sa.String),
-        column('options', sa.JSON),
-        column('question', sa.String),
-        column('created_at', sa.DateTime(timezone=True)),
-        column('updated_at', sa.DateTime(timezone=True))
-    )
-    
-    question_junctions = table('question_junctions',
-        column('id', sa.Integer),
-        column('questionnaire_id', sa.Integer),
-        column('question_id', sa.Integer),
-        column('priority', sa.Integer),
-        column('created_at', sa.DateTime(timezone=True)),
-        column('updated_at', sa.DateTime(timezone=True))
-    )
-    
     # Load and insert questionnaires
     logger.info("Loading questionnaires from CSV")
     questionnaire_data = load_csv_data('questionnaire_questionnaires.csv')
-    op.bulk_insert(questionnaires, [
-        {
-            'id': int(q['id']),
-            'name': q['name'],
-            'created_at': sa.func.now(),
-            'updated_at': None
-        }
-        for q in questionnaire_data
-    ])
+    op.execute(
+        """
+        INSERT INTO questionnaires (id, name)
+        VALUES (:id, :name)
+        """,
+        [
+            {
+                'id': int(q['id']),
+                'name': q['name']
+            }
+            for q in questionnaire_data
+        ]
+    )
     
     # Load and insert questions
     logger.info("Loading questions from CSV")
     question_data = load_csv_data('questionnaire_questions.csv')
     for q in question_data:
         q_data = json.loads(q['question'])
-        op.bulk_insert(questions, [{
-            'id': int(q['id']),
-            'type': q_data['type'],
-            'options': q_data.get('options', []),
-            'question': q_data['question'],
-            'created_at': sa.func.now(),
-            'updated_at': None
-        }])
+        op.execute(
+            """
+            INSERT INTO questions (id, type, options, question)
+            VALUES (:id, :type, :options, :question)
+            """,
+            {
+                'id': int(q['id']),
+                'type': q_data['type'],
+                'options': json.dumps(q_data.get('options', [])),
+                'question': q_data['question']
+            }
+        )
     
     # Load and insert question junctions
     logger.info("Loading question junctions from CSV")
     junction_data = load_csv_data('questionnaire_junction.csv')
-    op.bulk_insert(question_junctions, [
-        {
-            'id': int(j['id']),
-            'questionnaire_id': int(j['questionnaire_id']),
-            'question_id': int(j['question_id']),
-            'priority': int(j['priority']),
-            'created_at': sa.func.now(),
-            'updated_at': None
-        }
-        for j in junction_data
-    ])
+    op.execute(
+        """
+        INSERT INTO question_junctions (id, questionnaire_id, question_id, priority)
+        VALUES (:id, :questionnaire_id, :question_id, :priority)
+        """,
+        [
+            {
+                'id': int(j['id']),
+                'questionnaire_id': int(j['questionnaire_id']),
+                'question_id': int(j['question_id']),
+                'priority': int(j['priority'])
+            }
+            for j in junction_data
+        ]
+    )
     
     logger.info("Sample data migration completed")
 
