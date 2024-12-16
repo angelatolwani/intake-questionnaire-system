@@ -142,6 +142,7 @@ export const submitResponse = async (
   try {
     console.log('Submitting response for questionnaire with id:', questionnaireId);
     console.log('API URL:', api.defaults.baseURL);
+    console.log('Request payload:', { questionnaire_id: questionnaireId, answers });
     
     const response = await api.post<Response>('/responses/', {
       questionnaire_id: questionnaireId,
@@ -151,7 +152,23 @@ export const submitResponse = async (
     console.log('Submit response response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Submit response error:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Submit response error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          data: error.config?.data
+        }
+      });
+    } else {
+      console.error('Submit response error:', error);
+    }
     throw error;
   }
 };

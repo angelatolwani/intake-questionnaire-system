@@ -183,39 +183,53 @@ async def create_response(
     db: Session = Depends(auth.get_db),
     current_user: models.User = Depends(auth.get_current_active_user)
 ):
-    # Check if user has already submitted a response for this questionnaire
-    existing_response = db.query(models.Response).filter(
-        models.Response.user_id == current_user.id,
-        models.Response.questionnaire_id == response.questionnaire_id
-    ).first()
-
-    if existing_response:
-        # Delete existing response and its answers
-        db.query(models.Answer).filter(models.Answer.response_id == existing_response.id).delete()
-        db.delete(existing_response)
-        db.commit()
-
-    # Create new response
-    db_response = models.Response(
-        id=str(uuid.uuid4()),
-        user_id=current_user.id,
-        questionnaire_id=response.questionnaire_id
-    )
-    db.add(db_response)
+    logger.info(f"Creating response for user {current_user.id} questionnaire {response.questionnaire_id}")
+    logger.info(f"Answers: {response.answers}")
     
-    # Create answers
-    for answer_data in response.answers:
-        answer = models.Answer(
+    try:
+        # Check if user has already submitted a response for this questionnaire
+        existing_response = db.query(models.Response).filter(
+            models.Response.user_id == current_user.id,
+            models.Response.questionnaire_id == response.questionnaire_id
+        ).first()
+
+        if existing_response:
+            logger.info(f"Found existing response {existing_response.id}, deleting it")
+            # Delete existing response and its answers
+            db.query(models.Answer).filter(models.Answer.response_id == existing_response.id).delete()
+            db.delete(existing_response)
+            db.commit()
+
+        # Create new response
+        db_response = models.Response(
             id=str(uuid.uuid4()),
-            response_id=db_response.id,
-            question_id=answer_data.question_id,
-            value=answer_data.value
+            user_id=current_user.id,
+            questionnaire_id=response.questionnaire_id
         )
-        db.add(answer)
-    
-    db.commit()
-    db.refresh(db_response)
-    return db_response
+        db.add(db_response)
+        db.commit()  # Commit to get the response ID
+        
+        logger.info(f"Created new response {db_response.id}")
+        
+        # Create answers
+        for answer_data in response.answers:
+            logger.info(f"Creating answer for question {answer_data.question_id}")
+            answer = models.Answer(
+                id=str(uuid.uuid4()),
+                response_id=db_response.id,
+                question_id=answer_data.question_id,
+                value=answer_data.value
+            )
+            db.add(answer)
+        
+        db.commit()
+        db.refresh(db_response)
+        return db_response
+        
+    except Exception as e:
+        logger.error(f"Error creating response: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Admin endpoints
 @app.get("/admin/responses/", response_model=List[schemas.Response])
