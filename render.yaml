@@ -14,7 +14,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://questionnaire-backend.onrender.com
+        value: https://questionnaire-backend-l0bs.onrender.com
       - key: NODE_VERSION
         value: 18.17.0
 
@@ -42,8 +42,12 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: ALGORITHM
+        value: "HS256"
       - key: CORS_ORIGINS
-        value: https://questionnaire-frontend.onrender.com
+        value: https://questionnaire-frontend.onrender.com,https://questionnaire-frontend-l0bs.onrender.com
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PYTHONPATH
