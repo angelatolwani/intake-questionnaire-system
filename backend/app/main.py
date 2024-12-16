@@ -1,30 +1,45 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 import uuid
 from datetime import timedelta
+import logging
 from . import models, schemas, auth
 from .database import engine, SessionLocal
 from .import_data import import_data
 
-# Remove table creation since we're using Alembic migrations
-# models.Base.metadata.create_all(bind=engine)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Intake Questionnaire System")
 
 # CORS middleware
+origins = [
+    "http://localhost:3000",  # Local development
+    "https://questionnaire-frontend.onrender.com",  # Production frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Local development
-        "https://questionnaire-frontend.onrender.com"  # Production frontend
-    ],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept"],
+    expose_headers=["Content-Type", "Authorization"]
 )
+
+# Add logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    logger.info(f"Headers: {request.headers}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    logger.info(f"Response headers: {response.headers}")
+    return response
 
 # Authentication endpoints
 @app.post("/token", response_model=schemas.Token)

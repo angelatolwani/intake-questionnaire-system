@@ -18,11 +18,15 @@ api.interceptors.request.use((config) => {
 });
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
-  const formData = new FormData();
+  const formData = new URLSearchParams();
   formData.append('username', username);
   formData.append('password', password);
   
-  const response = await api.post<LoginResponse>('/token', formData);
+  const response = await api.post<LoginResponse>('/token', formData.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
   return response.data;
 };
 
