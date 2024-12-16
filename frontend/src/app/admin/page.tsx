@@ -19,7 +19,9 @@ import {
   CardContent,
   Typography,
   Container,
+  Box,
 } from '@mui/material';
+import LogoutButton from '@/components/LogoutButton';
 
 interface UserResponse {
   username: string;
@@ -76,7 +78,14 @@ export default function AdminPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h3" component="h1">
+          Admin Dashboard
+        </Typography>
+        <LogoutButton />
+      </Box>
+
+      <Typography variant="h4" component="h2" gutterBottom>
         User Responses
       </Typography>
       
