@@ -5,6 +5,8 @@ services:
     plan: free
     buildCommand: |
       cd frontend
+      rm -rf node_modules .next
+      npm cache clean --force
       npm install
       npm run build
     startCommand: cd frontend && npm start
@@ -20,6 +22,8 @@ services:
     plan: free
     buildCommand: |
       cd backend
+      pip cache purge
+      rm -rf __pycache__ .pytest_cache
       pip install -r requirements.txt
       export PYTHONPATH=$PYTHONPATH:$(pwd)
       alembic upgrade head
