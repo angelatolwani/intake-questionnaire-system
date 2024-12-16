@@ -8,7 +8,7 @@ Create Date: 2024-12-16 05:05:00.000000
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.sql import table, column
+from sqlalchemy.sql import text
 import logging
 import uuid
 import json
@@ -72,15 +72,14 @@ def upgrade() -> None:
         )
     """)
     
+    connection = op.get_bind()
+    
     # Load and insert questionnaires
     logger.info("Loading questionnaires from CSV")
     questionnaire_data = load_csv_data('questionnaire_questionnaires.csv')
     for q in questionnaire_data:
-        op.execute(
-            """
-            INSERT INTO questionnaires (id, name)
-            VALUES (:id, :name)
-            """,
+        connection.execute(
+            text("INSERT INTO questionnaires (id, name) VALUES (:id, :name)"),
             {
                 'id': int(q['id']),
                 'name': q['name']
@@ -92,11 +91,8 @@ def upgrade() -> None:
     question_data = load_csv_data('questionnaire_questions.csv')
     for q in question_data:
         q_data = json.loads(q['question'])
-        op.execute(
-            """
-            INSERT INTO questions (id, type, options, question)
-            VALUES (:id, :type, :options, :question)
-            """,
+        connection.execute(
+            text("INSERT INTO questions (id, type, options, question) VALUES (:id, :type, :options, :question)"),
             {
                 'id': int(q['id']),
                 'type': q_data['type'],
@@ -109,11 +105,8 @@ def upgrade() -> None:
     logger.info("Loading question junctions from CSV")
     junction_data = load_csv_data('questionnaire_junction.csv')
     for j in junction_data:
-        op.execute(
-            """
-            INSERT INTO question_junctions (id, questionnaire_id, question_id, priority)
-            VALUES (:id, :questionnaire_id, :question_id, :priority)
-            """,
+        connection.execute(
+            text("INSERT INTO question_junctions (id, questionnaire_id, question_id, priority) VALUES (:id, :questionnaire_id, :question_id, :priority)"),
             {
                 'id': int(j['id']),
                 'questionnaire_id': int(j['questionnaire_id']),
