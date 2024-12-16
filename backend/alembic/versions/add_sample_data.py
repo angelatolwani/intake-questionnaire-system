@@ -45,13 +45,19 @@ def verify_table_structure(connection):
     logger.info(f"Found columns in questionnaires table: {columns}")
     
     if 'name' not in columns:
-        # Create the table from scratch
-        logger.info("Creating questionnaires table")
+        # Drop all dependent tables first
+        logger.info("Dropping existing tables")
         connection.execute(text("""
-            DROP TABLE IF EXISTS question_junctions;
-            DROP TABLE IF EXISTS questions;
-            DROP TABLE IF EXISTS questionnaires;
-            
+            DROP TABLE IF EXISTS responses CASCADE;
+            DROP TABLE IF EXISTS questionnaire_questions CASCADE;
+            DROP TABLE IF EXISTS question_junctions CASCADE;
+            DROP TABLE IF EXISTS questions CASCADE;
+            DROP TABLE IF EXISTS questionnaires CASCADE;
+        """))
+        
+        # Create tables in correct order
+        logger.info("Creating tables")
+        connection.execute(text("""
             CREATE TABLE questionnaires (
                 id INTEGER PRIMARY KEY,
                 name VARCHAR NOT NULL,
