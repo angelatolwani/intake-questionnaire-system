@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
+import { useEffect } from 'react';
 
 interface LoginForm {
   username: string;
@@ -11,8 +12,18 @@ interface LoginForm {
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
-  const { login, error: loginError } = useAuthStore();
+  const { login, error: loginError, user } = useAuthStore();
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      if (user.is_admin) {
+        router.push('/admin');
+      } else {
+        router.push('/questionnaires');
+      }
+    }
+  }, [user, router]);
 
   const onSubmit = async (data: LoginForm) => {
     await login(data.username, data.password);
