@@ -75,19 +75,17 @@ def upgrade() -> None:
     # Load and insert questionnaires
     logger.info("Loading questionnaires from CSV")
     questionnaire_data = load_csv_data('questionnaire_questionnaires.csv')
-    op.execute(
-        """
-        INSERT INTO questionnaires (id, name)
-        VALUES (:id, :name)
-        """,
-        [
+    for q in questionnaire_data:
+        op.execute(
+            """
+            INSERT INTO questionnaires (id, name)
+            VALUES (:id, :name)
+            """,
             {
                 'id': int(q['id']),
                 'name': q['name']
             }
-            for q in questionnaire_data
-        ]
-    )
+        )
     
     # Load and insert questions
     logger.info("Loading questions from CSV")
@@ -110,21 +108,19 @@ def upgrade() -> None:
     # Load and insert question junctions
     logger.info("Loading question junctions from CSV")
     junction_data = load_csv_data('questionnaire_junction.csv')
-    op.execute(
-        """
-        INSERT INTO question_junctions (id, questionnaire_id, question_id, priority)
-        VALUES (:id, :questionnaire_id, :question_id, :priority)
-        """,
-        [
+    for j in junction_data:
+        op.execute(
+            """
+            INSERT INTO question_junctions (id, questionnaire_id, question_id, priority)
+            VALUES (:id, :questionnaire_id, :question_id, :priority)
+            """,
             {
                 'id': int(j['id']),
                 'questionnaire_id': int(j['questionnaire_id']),
                 'question_id': int(j['question_id']),
                 'priority': int(j['priority'])
             }
-            for j in junction_data
-        ]
-    )
+        )
     
     logger.info("Sample data migration completed")
 
