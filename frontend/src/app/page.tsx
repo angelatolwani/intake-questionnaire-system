@@ -8,43 +8,71 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <Container maxWidth="md" sx={{ 
+    <Box sx={{
       minHeight: '100vh',
+      background: '#fafafa',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      py: 4
+      py: 4,
+      px: 2,
     }}>
-      <Paper elevation={3} sx={{ 
-        p: 6, 
+      <Paper elevation={0} sx={{
+        p: { xs: 4, md: 8 },
         textAlign: 'center',
-        borderRadius: 2,
-        maxWidth: '600px'
+        maxWidth: '700px',
+        background: 'transparent',
       }}>
-        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Welcome to the Questionnaire System
-        </Typography>
-        
-        <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>
-          A simple and efficient way to collect and manage responses through customized questionnaires.
+        <Typography 
+          variant="h1" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 300,
+            fontSize: { xs: '2.5rem', md: '4rem' },
+            letterSpacing: '-0.02em',
+            color: '#2c3e50',
+            mb: 3,
+          }}
+        >
+          Questionnaire System
         </Typography>
 
-        <Box sx={{ mt: 4 }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => router.push('/login')}
-            startIcon={<LoginIcon />}
-            sx={{ 
-              py: 1.5,
-              px: 4,
-              fontSize: '1.1rem'
-            }}
-          >
-            Get Started
-          </Button>
-        </Box>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            mb: 6,
+            fontSize: { xs: '1.1rem', md: '1.4rem' },
+            lineHeight: 1.6,
+            maxWidth: '600px',
+            mx: 'auto',
+            color: '#546e7a',
+            fontWeight: 300,
+          }}
+        >
+          A streamlined platform for collecting and managing responses
+        </Typography>
+
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => router.push('/login')}
+          startIcon={<LoginIcon />}
+          sx={{
+            py: 2,
+            px: 6,
+            fontSize: '1.1rem',
+            fontWeight: 400,
+            borderRadius: 2,
+            textTransform: 'none',
+            backgroundColor: '#2c3e50',
+            '&:hover': {
+              backgroundColor: '#34495e',
+            }
+          }}
+        >
+          Get Started
+        </Button>
       </Paper>
-    </Container>
+    </Box>
   );
 }
