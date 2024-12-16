@@ -18,28 +18,37 @@ app = FastAPI(title="Intake Questionnaire System")
 
 # CORS middleware
 origins = [
-    "http://localhost:3000",  # Local development
-    "https://questionnaire-frontend.onrender.com",  # Production frontend
+    "http://localhost:3000",
+    "https://questionnaire-frontend.onrender.com"
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept"],
-    expose_headers=["Content-Type", "Authorization"]
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Add logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logger.info(f"Incoming request: {request.method} {request.url}")
-    logger.info(f"Headers: {request.headers}")
+    logger.info(f"Request path: {request.url.path}")
+    logger.info(f"Request method: {request.method}")
+    logger.info(f"Request headers: {request.headers}")
+    
     response = await call_next(request)
+    
     logger.info(f"Response status: {response.status_code}")
-    logger.info(f"Response headers: {response.headers}")
+    logger.info(f"Response headers: {dict(response.headers)}")
     return response
+
+@app.get("/")
+async def root():
+    return {"message": "API is running"}
+
+@app.options("/token")
+async def token_preflight():
+    return {}
 
 # Authentication endpoints
 @app.post("/token", response_model=schemas.Token)
@@ -47,18 +56,26 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(auth.get_db)
 ):
-    user = auth.authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    logger.info("Login attempt for user: %s", form_data.username)
+    try:
+        user = auth.authenticate_user(db, form_data.username, form_data.password)
+        if not user:
+            logger.error("Invalid credentials for user: %s", form_data.username)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = auth.create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
         )
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+        logger.info("Login successful for user: %s", form_data.username)
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        logger.error("Login error for user %s: %s", form_data.username, str(e))
+        raise
 
 # User endpoints
 @app.post("/users/", response_model=schemas.User)
