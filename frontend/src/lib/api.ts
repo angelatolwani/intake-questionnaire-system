@@ -176,30 +176,51 @@ export const submitResponse = async (
 // Admin endpoints
 export const getAllResponses = async (): Promise<Response[]> => {
   try {
-    console.log('Getting all responses');
-    console.log('API URL:', api.defaults.baseURL);
-    
-    const response = await api.get<Response[]>('/admin/responses/');
-    
-    console.log('All responses response:', response.data);
+    const response = await api.get<Response[]>('/admin/responses');
     return response.data;
   } catch (error) {
-    console.error('Get all responses error:', error);
+    handleApiError(error);
     throw error;
   }
 };
 
-export const getUserResponses = async (userId: string): Promise<Response[]> => {
+export const getUserResponses = async (userId?: string): Promise<any> => {
   try {
-    console.log('Getting responses for user with id:', userId);
-    console.log('API URL:', api.defaults.baseURL);
-    
-    const response = await api.get<Response[]>(`/admin/users/${userId}/responses`);
-    
-    console.log('User responses response:', response.data);
+    const url = userId ? `/responses/${userId}` : '/admin/user-responses';
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error('Get user responses error:', error);
+    handleApiError(error);
     throw error;
+  }
+};
+
+export const getUserResponseDetails = async (username: string): Promise<any> => {
+  try {
+    const response = await api.get(`/admin/user-responses/${username}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+const handleApiError = (error: any) => {
+  if (axios.isAxiosError(error)) {
+    console.error('API error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.response?.headers,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        data: error.config?.data
+      }
+    });
+  } else {
+    console.error('Non-Axios error:', error);
   }
 };

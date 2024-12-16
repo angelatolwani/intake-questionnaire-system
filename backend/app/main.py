@@ -273,6 +273,78 @@ async def get_user_responses(
         raise HTTPException(status_code=403, detail="Not authorized")
     return db.query(models.Response).filter(models.Response.user_id == user_id).all()
 
+@app.get("/admin/user-responses")
+async def get_user_responses(
+    db: Session = Depends(auth.get_db),
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get all users and their response counts
+    user_responses = db.query(
+        models.User.username,
+        sa.func.count(models.Response.id).label('response_count')
+    ).outerjoin(
+        models.Response
+    ).group_by(
+        models.User.username
+    ).all()
+    
+    return [{"username": username, "response_count": count} for username, count in user_responses]
+
+@app.get("/admin/user-responses/{username}")
+async def get_user_response_details(
+    username: str,
+    db: Session = Depends(auth.get_db),
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get user's responses with questionnaire details
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    responses = db.query(
+        models.Response,
+        models.Questionnaire.name.label('questionnaire_name')
+    ).join(
+        models.Questionnaire
+    ).filter(
+        models.Response.user_id == user.id
+    ).all()
+    
+    result = []
+    for response, questionnaire_name in responses:
+        # Get answers with questions
+        answers = db.query(
+            models.Answer,
+            models.Question
+        ).join(
+            models.Question
+        ).filter(
+            models.Answer.response_id == response.id
+        ).order_by(
+            models.Question.id
+        ).all()
+        
+        formatted_answers = []
+        for answer, question in answers:
+            formatted_answers.append({
+                "question": question.question,
+                "answer": answer.value
+            })
+        
+        result.append({
+            "username": username,
+            "questionnaire_name": questionnaire_name,
+            "answers": formatted_answers
+        })
+    
+    return result
+
 # Data import endpoint (admin only)
 @app.post("/admin/import-data")
 async def import_csv_data(
