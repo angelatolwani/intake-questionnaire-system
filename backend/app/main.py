@@ -10,6 +10,7 @@ from . import models, schemas, auth
 from .database import engine, SessionLocal
 from .import_data import import_data
 import sqlalchemy as sa
+from sqlalchemy import text
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -75,6 +76,16 @@ async def test_db(db: Session = Depends(auth.get_db)):
     except Exception as e:
         logger.error(f"Database error: {str(e)}")
         return {"status": "error", "message": str(e)}
+
+@app.get("/test-db")
+async def test_db(db: Session = Depends(auth.get_db)):
+    try:
+        # Try to execute a simple query
+        result = db.execute(text("SELECT 1"))
+        return {"status": "ok", "message": "Database connection successful"}
+    except Exception as e:
+        logger.error(f"Database connection error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.options("/token")
 async def token_preflight():
@@ -187,6 +198,13 @@ async def create_response(
     logger.info(f"Answers: {response.answers}")
     
     try:
+        # Validate that all questions exist
+        for answer in response.answers:
+            question = db.query(models.Question).filter(models.Question.id == answer.question_id).first()
+            if not question:
+                raise HTTPException(status_code=400, detail=f"Question {answer.question_id} not found")
+            logger.info(f"Question {answer.question_id} exists, type: {question.type}, value: {answer.value}")
+
         # Check if user has already submitted a response for this questionnaire
         existing_response = db.query(models.Response).filter(
             models.Response.user_id == current_user.id,
@@ -214,6 +232,9 @@ async def create_response(
         # Create answers
         for answer_data in response.answers:
             logger.info(f"Creating answer for question {answer_data.question_id}")
+            logger.info(f"Answer value type: {type(answer_data.value)}")
+            logger.info(f"Answer value: {answer_data.value}")
+            
             answer = models.Answer(
                 id=str(uuid.uuid4()),
                 response_id=db_response.id,
@@ -228,6 +249,7 @@ async def create_response(
         
     except Exception as e:
         logger.error(f"Error creating response: {str(e)}")
+        logger.exception("Full traceback:")
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
