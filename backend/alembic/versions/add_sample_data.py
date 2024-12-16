@@ -33,46 +33,65 @@ def load_csv_data(filename: str) -> list:
         return list(reader)
 
 
+def verify_table_structure(connection):
+    # Check if questionnaires table exists and has the correct structure
+    result = connection.execute(text("""
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'questionnaires'
+        ORDER BY column_name;
+    """))
+    columns = {row[0]: row[1] for row in result}
+    logger.info(f"Found columns in questionnaires table: {columns}")
+    
+    if 'name' not in columns:
+        # Create the table from scratch
+        logger.info("Creating questionnaires table")
+        connection.execute(text("""
+            DROP TABLE IF EXISTS question_junctions;
+            DROP TABLE IF EXISTS questions;
+            DROP TABLE IF EXISTS questionnaires;
+            
+            CREATE TABLE questionnaires (
+                id INTEGER PRIMARY KEY,
+                name VARCHAR NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE
+            );
+            
+            CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                type VARCHAR NOT NULL,
+                options JSON,
+                question VARCHAR NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE
+            );
+            
+            CREATE TABLE question_junctions (
+                id INTEGER PRIMARY KEY,
+                questionnaire_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
+                priority INTEGER NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE,
+                FOREIGN KEY (questionnaire_id) REFERENCES questionnaires (id),
+                FOREIGN KEY (question_id) REFERENCES questions (id),
+                UNIQUE (questionnaire_id, question_id)
+            );
+        """))
+        return True
+    return True
+
+
 def upgrade() -> None:
     logger.info("Starting sample data migration")
     
-    # Ensure tables exist
-    logger.info("Ensuring tables exist")
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS questionnaires (
-            id INTEGER PRIMARY KEY,
-            name VARCHAR NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE
-        )
-    """)
-    
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY,
-            type VARCHAR NOT NULL,
-            options JSON,
-            question VARCHAR NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE
-        )
-    """)
-    
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS question_junctions (
-            id INTEGER PRIMARY KEY,
-            questionnaire_id INTEGER NOT NULL,
-            question_id INTEGER NOT NULL,
-            priority INTEGER NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE,
-            FOREIGN KEY (questionnaire_id) REFERENCES questionnaires (id),
-            FOREIGN KEY (question_id) REFERENCES questions (id),
-            UNIQUE (questionnaire_id, question_id)
-        )
-    """)
-    
     connection = op.get_bind()
+    
+    # First verify and potentially fix table structure
+    if not verify_table_structure(connection):
+        raise Exception("Failed to verify or create table structure")
     
     # Load and insert questionnaires
     logger.info("Loading questionnaires from CSV")
