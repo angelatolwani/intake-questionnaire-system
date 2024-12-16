@@ -126,11 +126,19 @@ async def create_user(
     db.refresh(db_user)
     return db_user
 
+@app.options("/users/me")
+@app.options("/users/me/")
+async def users_me_preflight():
+    return {}
+
+@app.get("/users/me")
 @app.get("/users/me/", response_model=schemas.User)
-async def read_users_me(
-    current_user: models.User = Depends(auth.get_current_active_user)
-):
-    return current_user
+async def read_users_me(current_user: models.User = Depends(auth.get_current_active_user)):
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "is_admin": current_user.is_admin
+    }
 
 # Questionnaire endpoints
 @app.get("/questionnaires/", response_model=List[schemas.Questionnaire])
