@@ -31,7 +31,10 @@ services:
       pip install -r requirements.txt --no-cache-dir
       export PYTHONPATH=$PYTHONPATH:$(pwd)
       alembic upgrade head
-    startCommand: cd backend && gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    startCommand: |
+      cd backend
+      alembic upgrade head
+      gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:

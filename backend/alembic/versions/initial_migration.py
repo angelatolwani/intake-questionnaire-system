@@ -57,6 +57,29 @@ def upgrade() -> None:
         sa.UniqueConstraint('username')
     )
 
+    # Insert initial admin user
+    users_table = table('users',
+        column('id', sa.String),
+        column('username', sa.String),
+        column('password', sa.String),
+        column('is_admin', sa.Boolean)
+    )
+    
+    op.bulk_insert(users_table, [
+        {
+            'id': str(uuid.uuid4()),
+            'username': 'admin',
+            'password': hash_password('admin123'),
+            'is_admin': True
+        },
+        {
+            'id': str(uuid.uuid4()),
+            'username': 'user',
+            'password': hash_password('user123'),
+            'is_admin': False
+        }
+    ])
+
     # Create questionnaires table
     op.create_table(
         'questionnaires',
@@ -124,13 +147,6 @@ def upgrade() -> None:
     )
 
     # Insert seed data
-    users = table('users',
-        column('id', sa.String),
-        column('username', sa.String),
-        column('password', sa.String),
-        column('is_admin', sa.Boolean)
-    )
-
     questionnaires = table('questionnaires',
         column('id', sa.Integer),
         column('name', sa.String)
@@ -149,22 +165,6 @@ def upgrade() -> None:
         column('question_id', sa.Integer),
         column('priority', sa.Integer)
     )
-
-    # Insert users
-    op.bulk_insert(users, [
-        {
-            'id': str(uuid.uuid4()),
-            'username': 'admin',
-            'password': hash_password('admin123'),
-            'is_admin': True
-        },
-        {
-            'id': str(uuid.uuid4()),
-            'username': 'user',
-            'password': hash_password('user123'),
-            'is_admin': False
-        }
-    ])
 
     # Load and insert questionnaires
     questionnaire_data = load_csv_data('questionnaire_questionnaires.csv')

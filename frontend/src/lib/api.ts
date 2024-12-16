@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { LoginResponse, Questionnaire, QuestionnaireWithQuestions, Response, User } from '../types/api';
 
 const api = axios.create({
@@ -19,12 +19,22 @@ api.interceptors.request.use((config) => {
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
   try {
+    console.log('Login attempt:', { username, url: api.defaults.baseURL });
+    
+    // Create form data
     const formData = new URLSearchParams();
     formData.append('username', username);
     formData.append('password', password);
     
-    console.log('Attempting login with:', { username });
-    console.log('API URL:', api.defaults.baseURL);
+    // Log the request details
+    console.log('Request details:', {
+      url: `${api.defaults.baseURL}/token`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: formData.toString()
+    });
     
     const response = await api.post<LoginResponse>('/token', formData, {
       headers: {
@@ -32,10 +42,35 @@ export const login = async (username: string, password: string): Promise<LoginRe
       },
     });
     
-    console.log('Login response:', response.data);
+    // Log successful response
+    console.log('Login successful:', response.data);
+    
+    // Store the token
+    if (response.data.access_token) {
+      localStorage.setItem('token', response.data.access_token);
+    }
+    
     return response.data;
   } catch (error) {
-    console.error('Login error:', error);
+    // Enhanced error logging
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<any>;
+      console.error('Login error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        headers: axiosError.response?.headers,
+        config: {
+          url: axiosError.config?.url,
+          method: axiosError.config?.method,
+          headers: axiosError.config?.headers,
+          data: axiosError.config?.data
+        }
+      });
+    } else {
+      console.error('Non-Axios error:', error);
+    }
     throw error;
   }
 };
